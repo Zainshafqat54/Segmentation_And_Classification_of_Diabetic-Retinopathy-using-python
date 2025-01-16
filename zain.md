@@ -1,20 +1,14 @@
 # README: Triggering Handlers Based on URL Patterns in Follow Requests
 
-This document explains how to configure and use URL-based matchers to trigger handlers for different pages, such as listing pages and product pages. The process involves defining matchers and handlers that match URL patterns and perform specific actions, such as extracting data.
-
 ## **Overview**
-In a typical web scraping workflow, you might have a listing page with multiple product links. When a follow request is made to scrape a product page, the appropriate handler is triggered based on the URL pattern of the product page. This ensures the correct processing logic is applied to extract data.
+In Some websites you might have a listing page with multiple product links. When a follow request is made to scrape a product page, the appropriate handler is triggered based on the URL pattern of the product page. This ensures the correct processing logic is applied to extract data.
 
-## **Configuration Guide**
-### **Structure of the Configuration**
-The configuration is divided into several sections:
-1. **crawl-templates**: Defines the domain and scraping configuration for a website.
-2. **handler_matchers**: Maps handlers to URL patterns using matchers.
-3. **matchers**: Defines the patterns used to identify URLs for specific pages.
-4. **handlers**: Contains the actions to be performed when a specific handler is triggered.
+## Template Structure Overview
 
-### **Example Configuration**
-Below is an example configuration:
+- **crawl-templates**: Defines the domain and scraping configuration for a website.
+- **handler_matchers**: Maps handlers to URL patterns using matchers.
+- **matchers**: Defines the patterns used to identify URLs for specific pages.
+- **handlers**: Contains the actions to be performed when a specific handler is triggered.
 
 ```yaml
 crawl-templates:
@@ -105,10 +99,9 @@ Handlers specify the actions to perform for a matched URL:
 The `follow_requests` field in the `listing_page_handler` generates GET requests for product pages using the extracted `product_url` field.
 
 ### **Workflow**
-1. The scraper starts with a listing page URL.
-2. The `listing_page_handler` processes the page, extracts product URLs, and generates follow requests.
-3. When a follow request is made for a product URL, the `product_page_matcher` triggers the `product_page_handler`.
-4. The `product_page_handler` processes the product page and extracts the required data.
+- The `listing_page_handler` processes the page, extracts product URLs, and generates follow requests.
+- When a follow request is made for a product URL, the `product_page_matcher` triggers the `product_page_handler`.
+- The `product_page_handler` processes the product page and extracts the required data.
 
 ### **Customization**
 - Update the `pattern` fields in matchers to match specific URL structures for your use case.
@@ -116,6 +109,5 @@ The `follow_requests` field in the `listing_page_handler` generates GET requests
 
 ### **Troubleshooting**
 - **No Handler Triggered**: Ensure the URL matches a defined pattern in the matchers.
-- **Incorrect Data Extraction**: Verify XPath selectors and transformations in the handler configuration.
 
 This configuration enables precise triggering of handlers based on URL patterns, ensuring efficient and accurate data scraping.
