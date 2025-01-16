@@ -5,7 +5,7 @@
 1. **Handler Matchers**: Matches the correct handler to be applied based on the presence of the doctor’s location.
 2. **Field Group Before Row Selector In Extract Multiple Rows**: By placing the extraction fields (e.g., doctor name, gender, specialty, etc.) before the row_selector, the same set of doctor-level details are extracted once per page, and then location-level details are extracted for each location the doctor is associated with.
 
-Below template handlers are taken as a example from this config `here <https://github.com/crawlnow/crawl-packages/blob/main/packages/durableca-Nate/Priviahealth/config.yaml>`_
+Below template handlers are taken as a example from this config [Priviahealth](https://github.com/crawlnow/crawl-packages/blob/main/packages/durableca-Nate/Priviahealth/config.yaml)
 
 ## Template Structure Overview
 
