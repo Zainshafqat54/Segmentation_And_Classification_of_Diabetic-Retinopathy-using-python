@@ -5,17 +5,17 @@
 1. **Handler Matchers**: Matches the correct handler to be applied based on the presence of the doctor’s location.
 2. **Field Group Before Row Selector In Extract Multiple Rows**: By placing the extraction fields (e.g., doctor name, gender, specialty, etc.) before the row_selector, the same set of doctor-level details are extracted once per page, and then location-level details are extracted for each location the doctor is associated with.
 
-### Below template handlers are taken as a example from this config `here <https://github.com/crawlnow/crawl-packages/blob/main/packages/durableca-Nate/Priviahealth/config.yaml>`_
+Below template handlers are taken as a example from this config `here <https://github.com/crawlnow/crawl-packages/blob/main/packages/durableca-Nate/Priviahealth/config.yaml>`_
 
 ## Template Structure Overview
 
-1. **Template Name**: priviahealth  
-2. **Domain**: priviahealth.com  
-3. **Feed**: Contains `required_fields` and `export_fields` that define which data points are to be extracted.  
-4. **Handler Matchers**: Matches the correct handler to be applied based on the presence of the doctor’s location.  
-5. **Matchers**: Defines how to identify pages with or without location information (using XPath selectors).  
-6. **Retry Policies**: Defines the retry behavior when certain HTTP errors occur or when a match cannot be found.  
-7. **Handlers**: Defines actions to extract doctor data in two different scenarios (with and without location).  
+- **Template Name**: priviahealth  
+- **Domain**: priviahealth.com  
+- **Feed**: Contains `required_fields` and `export_fields` that define which data points are to be extracted.  
+- **Handler Matchers**: Matches the correct handler to be applied based on the presence of the doctor’s location.  
+- **Matchers**: Defines how to identify pages with or without location information (using XPath selectors).  
+- **Retry Policies**: Defines the retry behavior when certain HTTP errors occur or when a match cannot be found.  
+- **Handlers**: Defines actions to extract doctor data in two different scenarios (with and without location).  
 
 ---
 
@@ -74,13 +74,13 @@ By placing the doctor’s general information in the `fields_group` before the `
 
 To summarize how to extract multiple locations for a single doctor:
 
-1. **Before the Row Selector**:  
+- **Before the Row Selector**:  
    The general doctor information (e.g., doctor name, gender, language, specialty, etc.) is extracted in the `fields_group`. These fields are extracted once per page.
 
-2. **Using Row Selector**:  
+- **Using Row Selector**:  
    The XPath `//li[@class="provider-profile-provider-location css-3tglrm"]` identifies each individual location. Each location will be extracted separately.
 
-3. **Location-Specific Fields**:  
+- **Location-Specific Fields**:  
    In the `row_level_fields_group`, each location will have its own set of fields (e.g., location name, address, phone number, etc.), and these will be populated for each matched location.
 
 The result is a comprehensive list of locations for each doctor.
