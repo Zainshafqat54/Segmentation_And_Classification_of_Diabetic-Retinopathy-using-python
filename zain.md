@@ -1,113 +1,108 @@
-# README: Triggering Handlers Based on URL Patterns in Follow Requests
+## Pagination 
 
-## **Overview**
-In Some websites you might have a listing page with multiple product links. When a follow request is made to scrape a product page, the appropriate handler is triggered based on the URL pattern of the product page. This ensures the correct processing logic is applied to extract data.
+We have a action written specifically for pagination.
 
-## Template Structure Overview
-
-- **crawl-templates**: Defines the domain and scraping configuration for a website.
-- **handler_matchers**: Maps handlers to URL patterns using matchers.
-- **matchers**: Defines the patterns used to identify URLs for specific pages.
-- **handlers**: Contains the actions to be performed when a specific handler is triggered.
-
-```yaml
-crawl-templates:
-  - name: postpartner.cz
-    domain: postpartner.cz
-    javascript: false
-    feed:
-      export_fields:
-        - is_available
-        - product_url
-
-    handler_matchers:
-      - handler: listing_page_handler
-        matcher: listing_page_matcher
-      - handler: product_page_handler
-        matcher: product_page_matcher
-
-    matchers:
-      - name: listing_page_matcher
-        parameters:
-          is_regex: false
-          operator: matches
-          pattern:
-            - /hledani?query=
-        type: url_pattern
-
-      - name: product_page_matcher
-        parameters:
-          is_regex: false
-          operator: matches
-          pattern:
-            - postpartner.cz/
-        type: url_pattern
-
-    handlers:
-
-      - name: listing_page_handler
-        actions:
-          - action_type: extract_multiple_rows
-
-            row_selector:
+    ```
+              - action_type: paginate_next_page_button
+            selector:
               language: xpath
               path:
-                - (//div[contains(@class,'commodities')]//article[contains(@class,'commodityBox')])[position()<4]
+                - //a[@id="next-button"]/@data-url
+    ```
 
-            row_level_fields_group:
-              follow_requests:
-                - url: '{{product_url}}'
-                  method: GET
+This task automates pagination by interacting with the "Next Page" button until the last page is reached.
 
-              fields:
-                - name: product_url
-                  selector:
-                    language: xpath
-                    path:
-                      - .//@href
+### Configuration:
+- **Action Type:** `paginate_next_page_button`
+- **Selector:**
+  - **Language:** `xpath`
+  - **Path:**
+    ```
+    - //a[@id="next-button"]/@data-url
+    ```
 
-      - name: product_page_handler
-        actions:
-          - action_type: extract_single_row
-            fields_group:
-              fields:
+### Functionality:
+The task extracts the provided XPath or JSON path of the "Next Page" button and continues clicking it to navigate through pages until no further pages are available.
 
-                - name: is_available
-                  selector:
-                    language: xpath
-                    path:
-                      - //div[contains(@class,'commodityDetail')]//dl[contains(@class,'Availability')]//strong[contains(text(), 'Skladem')]
-                  transformations:
-                    - type: exists
-                      parameters:
-                        if_exists: 'Yes'
-                        if_not_exists: 'No'
-```
+### Advanced Configuration:
+In cases where direct interaction with the "Next Page" button is not feasible (e.g., URL generation based on dynamic parameters like an ID or start index), you can use a script function to generate the next page URL dynamically.
 
-### **Explanation of Key Sections**
-#### **Matchers**
-Matchers define the URL patterns to determine which handler to trigger. For example:
-- **Listing Page Matcher**: Matches URLs containing `/hledani?query=`.
-- **Product Page Matcher**: Matches URLs containing `postpartner.cz/`.
+- **Code Example:**
+  ```yaml
+  - action_type: paginate_next_page_button
+    script_function: get_next_page_url
+    selector:
+      language: json_path
+      path:
+        - next_page_url
+  ```
 
-#### **Handlers**
-Handlers specify the actions to perform for a matched URL:
-- **Listing Page Handler**: Extracts multiple product links and generates follow requests for each product.
-- **Product Page Handler**: Extracts data such as availability status from the product page.
+- **Script Function Example:**
+  ```python
+  def get_next_page_url(response):
 
-#### **Follow Requests**
-The `follow_requests` field in the `listing_page_handler` generates GET requests for product pages using the extracted `product_url` field.
+      json_obj = response.json()
+      total_records = json_obj['data']['paging']['total']
+      start = json_obj['data']['paging']['start']
+      count = json_obj['data']['paging']['count']
 
-### **Workflow**
-- The `listing_page_handler` processes the page, extracts product URLs, and generates follow requests.
-- When a follow request is made for a product URL, the `product_page_matcher` triggers the `product_page_handler`.
-- The `product_page_handler` processes the product page and extracts the required data.
+      if start + count >= total_records:
+          return {'next_page_url': None}, 'json'
 
-### **Customization**
-- Update the `pattern` fields in matchers to match specific URL structures for your use case.
-- Define additional handlers and actions as needed to handle other page types.
+      url = response.url.replace(f'start={start}', f'start={start+10}')
+      return {'next_page_url': url}, 'json'
+  ```
 
-### **Troubleshooting**
-- **No Handler Triggered**: Ensure the URL matches a defined pattern in the matchers.
+### How It Works:
+1. The script function generates the next page URL dynamically by modifying required parameters (e.g., start index).
+2. The URL is returned as a JSON dictionary (e.g., `{'next_page_url': url}`).
+3. In the configuration file, a selector with `json` language is added, and the `path` specifies the key of the value returned by the script function (e.g., `next_page_url`).
+4. Pagination happens seamlessly by using the dynamically generated URLs.
 
-This configuration enables precise triggering of handlers based on URL patterns, ensuring efficient and accurate data scraping.
+For advanced cases, the script function allows dynamic URL generation by modifying required parameters.
+
+
+### POST Request Pagination:
+
+For tasks involving POST requests, you can use the follow_requests method in the YAML configuration. This approach allows dynamic pagination by modifying the request payload and URL.
+
+- **Code Example:**
+  ```yaml
+  - script_function: pagination
+  follow_requests:
+    - url: '{{url}}'
+      method: POST
+      body: '{{payload}}'
+  ```
+
+- **Script Function Example:**
+  ```python
+  def pagination(response):
+    text: str = response.text
+    json_text = json.loads(text)
+
+    payload_json = json.loads(response.request.body.decode('utf-8'))
+    try:
+        total_records = json_text['data']['search']['resultList']['totalNumRecs']
+        cursor = json_text['data']['search']['resultList']['firstRecNum'] + json_text['data']['search']['resultList']['lastRecNum']
+
+        if cursor < total_records:
+            payload_json['variables']['no'] = json_text['data']['search']['resultList']['firstRecNum'] + 100
+            updated_url = response.url
+        else:
+            updated_url = None
+            payload_json = None
+
+        pagination_dict = {'url': updated_url, 'body': json.dumps(payload_json)}
+    except:
+        updated_url = None
+        payload_json = None
+        pagination_dict = {'url': updated_url, 'body': json.dumps(payload_json)}
+
+    return pagination_dict, 'json'
+  ```
+
+### How It Works:
+1. The script function extracts pagination data from a JSON response, calculates whether there are more records to fetch, and updates the request payload with the new parameters (if applicable). If there are more records, it modifies the no field in the request body to fetch the next set of records and returns the updated URL and payload. Otherwise, it returns None for both, indicating no further pages.
+2. The updated URL and payload are returned as a JSON dictionary (e.g., {'url': updated_url, 'body': payload}).
+3. In the configuration file, the follow_requests section uses the dynamically generated URL and payload for seamless pagination.
