@@ -5,7 +5,7 @@
 1. **Handler Matchers**: Matches the correct handler to be applied based on the presence of the doctor’s location.
 2. **Field Group Before Row Selector In Extract Multiple Rows**: By placing the extraction fields (e.g., doctor name, gender, specialty, etc.) before the row_selector, the same set of doctor-level details are extracted once per page, and then location-level details are extracted for each location the doctor is associated with.
 
-Below template handlers are taken as a example from this config `here <https://github.com/crawlnow/crawl-packages/blob/main/packages/durableca-Nate/Priviahealth/config.yaml>`_
+Below template handlers are taken as a example from this config [Priviahealth](https://github.com/crawlnow/crawl-packages/blob/main/packages/durableca-Nate/Priviahealth/config.yaml)
 
 ## Template Structure Overview
 
@@ -68,25 +68,7 @@ The result is a list of locations for the doctor, with each row containing both 
 
 By placing the doctor’s general information in the `fields_group` before the `row_selector`, we ensure that the doctor-level data is extracted only once, and then the location-specific data is extracted for each location, making it possible to handle multiple locations for a single doctor.
 
----
-
-## How to Extract Multiple Locations for a Single Doctor
-
-To summarize how to extract multiple locations for a single doctor:
-
-- **Before the Row Selector**:  
-   The general doctor information (e.g., doctor name, gender, language, specialty, etc.) is extracted in the `fields_group`. These fields are extracted once per page.
-
-- **Using Row Selector**:  
-   The XPath `//li[@class="provider-profile-provider-location css-3tglrm"]` identifies each individual location. Each location will be extracted separately.
-
-- **Location-Specific Fields**:  
-   In the `row_level_fields_group`, each location will have its own set of fields (e.g., location name, address, phone number, etc.), and these will be populated for each matched location.
-
-The result is a comprehensive list of locations for each doctor.
-
-
-By structuring the template in this way, we can ensure efficient extraction of both doctor details and location details, even when multiple locations are associated with a single doctor.
+-----------
 
 
 # 2: Using Follow Requests with Extract Multiple Rows
@@ -198,6 +180,8 @@ This guide explains how to use follow requests in an **Extract Multiple Rows** a
 ---
 
 By combining `Extract Multiple Rows`, `Script Function`, and `Follow Requests`, you can efficiently handle paginated and dynamic data extraction scenarios in those case where Supports scenarios where next-page requests data can be pre-generated at once for all pages (e.g., APIs or paginated web structures). This approach minimizes dependencies, maximizes parallel processing, and ensures robust data retrieval.
+
+-----------
 
 
 # 3: Triggering Handlers Based on URL Patterns in Follow Requests
@@ -313,7 +297,10 @@ The `follow_requests` field in the `listing_page_handler` generates GET requests
 
 This configuration enables precise triggering of handlers based on URL patterns, ensuring efficient and accurate data scraping.
 
-# 3. Pagination 
+-----------
+
+
+# 4: Pagination 
 
 We have a action written specifically for pagination.
 
