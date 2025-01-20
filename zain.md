@@ -17,7 +17,6 @@ Below template handlers are taken as a example from this config [Priviahealth](h
 - **Retry Policies**: Defines the retry behavior when certain HTTP errors occur or when a match cannot be found.  
 - **Handlers**: Defines actions to extract doctor data in two different scenarios (with and without location).  
 
----
 
 ## Handlers
 
@@ -42,7 +41,6 @@ There are two handlers used in this template:
 - **Fields Group**: Same as the previous handler, but only extracted once since there are no multiple locations to process.
 - **Row Selector**: Not applicable in this case because there is no location-level detail to handle.
 
----
 
 ## Explanation of Extracting Multiple Locations for a Single Doctor
 
@@ -68,14 +66,32 @@ The result is a list of locations for the doctor, with each row containing both 
 
 By placing the doctor’s general information in the `fields_group` before the `row_selector`, we ensure that the doctor-level data is extracted only once, and then the location-specific data is extracted for each location, making it possible to handle multiple locations for a single doctor.
 
------------
+
+## How to Extract Multiple Locations for a Single Doctor
+
+To summarize how to extract multiple locations for a single doctor:
+
+- **Before the Row Selector**:  
+   The general doctor information (e.g., doctor name, gender, language, specialty, etc.) is extracted in the `fields_group`. These fields are extracted once per page.
+
+- **Using Row Selector**:  
+   The XPath `//li[@class="provider-profile-provider-location css-3tglrm"]` identifies each individual location. Each location will be extracted separately.
+
+- **Location-Specific Fields**:  
+   In the `row_level_fields_group`, each location will have its own set of fields (e.g., location name, address, phone number, etc.), and these will be populated for each matched location.
+
+The result is a comprehensive list of locations for each doctor.
+
+
+By structuring the template in this way, we can ensure efficient extraction of both doctor details and location details, even when multiple locations are associated with a single doctor.
+
+---
+
 
 
 # 2: Using Follow Requests with Extract Multiple Rows
 
 This guide explains how to use follow requests in an **Extract Multiple Rows** action, where the row-level script function generates data dynamically. Follow requests in **extract_multiple_rows** action enable fetching data in parallel using URLs and bodies provided in each row, facilitating efficient pagination and data extraction.
-
----
 
 ## **Key Concepts**
 
@@ -95,7 +111,6 @@ This guide explains how to use follow requests in an **Extract Multiple Rows** a
   - **Body**: Dynamic, row-specific data (e.g., `{{game_link_follow_body}}`).
   - **Headers**: Defined globally or per-request as needed.
 
----
 
 ## **Code Example**
 
@@ -155,8 +170,6 @@ This guide explains how to use follow requests in an **Extract Multiple Rows** a
                       - 'rawPrice'
 ```
 
----
-
 ## **Advantages**
 
 1. **Independent Pagination Requests**:
@@ -168,8 +181,6 @@ This guide explains how to use follow requests in an **Extract Multiple Rows** a
    - Reduces dependency and speeds up the extraction process.
 
 
----
-
 ## **Example Use Case**
 
 - **Scenario**: Scraping event data from an API where:
@@ -177,11 +188,10 @@ This guide explains how to use follow requests in an **Extract Multiple Rows** a
   - Script function dynamically generates the next set of requests.
   - Follow requests independently fetch additional event details for each page.
 
----
 
 By combining `Extract Multiple Rows`, `Script Function`, and `Follow Requests`, you can efficiently handle paginated and dynamic data extraction scenarios in those case where Supports scenarios where next-page requests data can be pre-generated at once for all pages (e.g., APIs or paginated web structures). This approach minimizes dependencies, maximizes parallel processing, and ensures robust data retrieval.
 
------------
+---
 
 
 # 3: Triggering Handlers Based on URL Patterns in Follow Requests
@@ -297,7 +307,7 @@ The `follow_requests` field in the `listing_page_handler` generates GET requests
 
 This configuration enables precise triggering of handlers based on URL patterns, ensuring efficient and accurate data scraping.
 
------------
+---
 
 
 # 4: Pagination 
