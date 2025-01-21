@@ -418,3 +418,104 @@ For tasks involving POST requests, you can use the follow_requests method in the
 -  The script function extracts pagination data from a JSON response, calculates whether there are more records to fetch, and updates the request payload with the new parameters (if applicable). If there are more records, it modifies the no field in the request body to fetch the next set of records and returns the updated URL and payload. Otherwise, it returns None for both, indicating no further pages.
 -  The updated URL and payload are returned as a JSON dictionary (e.g., {'url': updated_url, 'body': payload}).
 -  In the configuration file, the follow_requests section uses the dynamically generated URL and payload for seamless pagination.
+
+---
+
+
+# 5: Retry Policies
+
+This is an overview of the three types of retry policies used in our framework and how they function. These policies help manage retries for requests in specific scenarios.
+
+
+## **Retry Policy Types**
+
+### **Status Code-Based Retry**
+This retry policy is triggered based on specific HTTP status codes returned in the response.
+
+#### Configuration:
+```yaml
+retry_policies:
+  - name: retry_policy
+    retry_status_codes: [500, 502, 503, 504, 521, 522, 524, 403, 408, 429, 405, 406, 600, 407]
+
+retry_policy_matchers:
+  - matcher: doctor_detail_page_without_location_matcher
+    retry_policy: retry_policy
+```
+
+#### How it works:
+- Retries occur when the response contains one of the specified status codes.
+- This approach is effective for handling well-known server and client error codes.
+
+
+### **Content-Based Retry**
+This policy retries based on specific content in the response, identified via XPath selectors.
+
+#### Configuration:
+```yaml
+retry_policies:
+  - name: retry_policy
+    retry_if_no_match:
+      selectors:
+        - language: xpath
+          path:
+            - //h1[@class='css-1rhegml']//text()
+            - //div[@data-testid="ErrorMessage"]//span[contains(text(), 'The page you are trying to reach is unavailable')]
+
+    retry_if_match:
+      selectors:
+        - language: xpath
+          path:
+            - //h1[@class='css-1rhegml']//text()
+            - //div[@data-testid="ErrorMessage"]//span[contains(text(), 'The page didn\'t load properly')]
+
+retry_policy_matchers:
+  - matcher: doctor_detail_page_without_location_matcher
+    retry_policy: retry_policy
+```
+
+#### How it works:
+- Retries are triggered if specific content is found (via `retry_if_match`) or not found (via `retry_if_no_match`) in the response.
+- XPath selectors are used to pinpoint the content to match or exclude.
+- Suitable for scenarios where error messages or specific content indicate a failure.
+
+
+### **Script-Based Retry**
+This policy uses a custom script to determine retry behavior.
+
+#### Configuration:
+```yaml
+retry_policies:
+  - name: retry_policy
+    retry_script_function: retry_func
+
+retry_policy_matchers:
+  - matcher: doctor_detail_page_without_location_matcher
+    retry_policy: retry_policy
+```
+
+#### How it works:
+- The `retry_func` function in the `script.py` file contains the logic for retrying.
+- Offers maximum flexibility, allowing complex custom logic to decide when retries should occur.
+
+#### Example (`script.py`):
+```python
+def retry_func(response):
+    # Custom logic to determine retry
+    if response.status_code == 500:
+        return True
+    if "Retry-Condition" in response.headers:
+        return True
+    return False
+```
+
+## **Usage**
+- All retry policies are mapped to specific matchers (e.g., `doctor_detail_page_without_location_matcher`) to associate them with appropriate scenarios.
+- Select the policy type based on the retry requirements of your application.
+
+### **Decision Guide:**
+1. **Use Status Code-Based Retry** for standard HTTP error codes.
+2. **Use Content-Based Retry** for content-based error handling.
+3. **Use Script-Based Retry** for advanced, script-driven retry logic.
+
+---
